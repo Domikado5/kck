@@ -16,6 +16,7 @@ ax11 = ax1.twiny()
 for file in files:
     data = pd.read_csv(file['name'])
     data['avg'] = data.iloc[:, 2:].copy().mean(axis=1)
+    # data['last_avg'] = data.iloc[-1, 2:]
     ax1.plot(
         data['effort']/1000, data['avg']*100, 
         label=file['label'], color=file['color'], 
@@ -23,6 +24,9 @@ for file in files:
         marker=file['marker'], markevery=25,
         markersize=5, markeredgecolor='black',
         markeredgewidth=0.5)
+    ax2.boxplot(
+        data['avg']*100
+    )
 ax1.axis(xmin=0, xmax=500, ymin=60, ymax=100)
 ax1.set_xlabel("Rozegranych gier (x1000)")
 ax1.set_ylabel("Odsetek wygranych gier [%]")
