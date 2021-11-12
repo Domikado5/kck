@@ -13,7 +13,7 @@ def draw_circles(image, circles):
 
 
 def main():
-    cv2.namedWindow('window')
+    cv2.namedWindow('window', cv2.WINDOW_NORMAL)
 
     cv2.createTrackbar('grayscale', 'window', 0, 1, null_func)
     cv2.createTrackbar('gaussian_toggle', 'window', 0, 1, null_func)
