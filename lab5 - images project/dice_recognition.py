@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 
 def null_func(arg):
@@ -43,6 +44,32 @@ def crop_dice(img, pos):
     (x, y, w, h) = pos
 
     return img[y:y+h, x:x+w]
+
+
+def plot_transformations(img_path='dices.jpg'):
+    """Plots all transformations, one by one, and saves the transformed images to a pdf.
+
+    Args:
+        img_path (str, optional): the path to an image. Defaults to 'dices.jpg'.
+    """
+    img_base = cv2.imread(img_path)
+    img_base = cv2.cvtColor(img_base, cv2.COLOR_BGR2RGB)
+    img_gray = cv2.cvtColor(img_base, cv2.COLOR_RGB2GRAY)
+    img_blur = cv2.GaussianBlur(img_gray, (3, 3), 0)
+    _, img_thresh = cv2.threshold(img_blur, 195, 255, cv2.THRESH_BINARY)
+    img_canny = cv2.Canny(img_thresh, 0, 0)
+
+    images = [img_base, img_gray, img_blur, img_thresh, img_canny]
+    transformations = ['Base', 'Grayscale', 'Gaussian Blur', 'Threshold', 'Canny']
+    for i in range(5):
+        plt.subplot(2, 3, i+1)
+        plt.xticks([])
+        plt.yticks([])
+        plt.title(transformations[i])
+        plt.imshow(images[i], cmap='gray')
+    plt.savefig('transformations.pdf')
+    plt.show()
+
 
 
 def main():
@@ -116,4 +143,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    plot_transformations()
