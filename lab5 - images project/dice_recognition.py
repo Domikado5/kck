@@ -46,7 +46,7 @@ def crop_dice(img, pos):
     return img[y:y+h, x:x+w]
 
 
-def plot_transformations(img_path='dices.jpg'):
+def plot_transformations(img_path='sample_images/dices.jpg'):
     """Plots all transformations, one by one, and saves the transformed images to a pdf.
 
     Args:
@@ -88,7 +88,7 @@ def main():
     cv2.createTrackbar('contour_area', 'window', 0, 1000, null_func)
     cv2.createTrackbar('dot_area', 'window', 0, 1000, null_func)
 
-    base_img = cv2.imread('dices.jpg')
+    base_img = cv2.imread('sample_images/dices.jpg')
 
     while True:
         img = base_img.copy()  # the copy of the base image that will be transformed
@@ -143,5 +143,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    plot_transformations()
+    main()
+    # plot_transformations()
