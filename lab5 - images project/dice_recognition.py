@@ -1,6 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import cv2
+
 
 def null_func(arg):
     pass
@@ -10,6 +10,39 @@ def draw_circles(image, circles):
     circles_np = np.round(circles[0, :]).astype('int')
     for (x, y, radius) in circles_np:
         cv2.circle(image, (x, y), radius, (255, 0, 0), 2)
+
+
+def count_dots(dice, thresh=500):
+    """Counts dots of a dice
+
+    Args:
+        dice (np.ndarray): a cropped image of a dice
+        thresh (int, optional): the area below which a contour will be considered a dot. Defaults to 500.
+
+    Returns:
+        int: number of dots
+    """
+    dice_copy = dice.copy()
+
+    contours, _ = cv2.findContours(dice_copy, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    dots = filter(lambda cont: cv2.contourArea(cont) < thresh, contours)
+
+    return len(list(dots))
+
+
+def crop_dice(img, pos):
+    """Crops a dice from an image in a given position
+
+    Args:
+        img (np.ndarray): an image from which the dices will be cropped
+        pos (tuple): a tuple containing the position of the dice (x, y, w, h)
+
+    Returns:
+        np.ndarray: a cropped image of a dice
+    """
+    (x, y, w, h) = pos
+
+    return img[y:y+h, x:x+w]
 
 
 def main():
@@ -26,6 +59,7 @@ def main():
     cv2.createTrackbar('canny_thresh_2', 'window', 0, 255, null_func)
     cv2.createTrackbar('contour_toggle', 'window', 0, 1, null_func)
     cv2.createTrackbar('contour_area', 'window', 0, 1000, null_func)
+    cv2.createTrackbar('dot_area', 'window', 0, 1000, null_func)
 
     base_img = cv2.imread('dices.jpg')
 
@@ -44,6 +78,7 @@ def main():
         canny_thresh_2  = cv2.getTrackbarPos('canny_thresh_2', 'window')
         contour_bool    = cv2.getTrackbarPos('contour_toggle', 'window') == 1
         area            = cv2.getTrackbarPos('contour_area', 'window')
+        dot_area        = cv2.getTrackbarPos('dot_area', 'window')
 
         if gray_bool:
             img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -59,12 +94,18 @@ def main():
             img = cv2.Canny(img, canny_thresh_1, canny_thresh_2)
         
         if contour_bool:
-            contours, _ = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            
+            contours, _ = cv2.findContours(img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+
             for contour in contours:
+
                 if cv2.contourArea(contour) > area:
                     (x, y, w, h) = cv2.boundingRect(contour)
                     cv2.rectangle(img_2, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+                    dice = crop_dice(img, (x, y, w, h))
+                    num_of_dots = count_dots(dice, dot_area)
+
+                    cv2.putText(img_2, f'Dots: {num_of_dots}', (int(x+w), int(y+h)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
 
 
         cv2.imshow('Transformed_img', img)
