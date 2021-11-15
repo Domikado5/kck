@@ -64,8 +64,8 @@ def main():
     base_img = cv2.imread('dices.jpg')
 
     while True:
-        img = base_img.copy()
-        img_2 = base_img.copy()
+        img = base_img.copy()  # the copy of the base image that will be transformed
+        img_2 = base_img.copy()  # the copy of the base image on which the contours etc will be drawn
 
         gray_bool       = cv2.getTrackbarPos('grayscale', 'window') == 1
         gaussian_bool   = cv2.getTrackbarPos('gaussian_toggle', 'window') == 1
@@ -77,8 +77,8 @@ def main():
         canny_thresh_1  = cv2.getTrackbarPos('canny_thresh_1', 'window')
         canny_thresh_2  = cv2.getTrackbarPos('canny_thresh_2', 'window')
         contour_bool    = cv2.getTrackbarPos('contour_toggle', 'window') == 1
-        area            = cv2.getTrackbarPos('contour_area', 'window')
-        dot_area        = cv2.getTrackbarPos('dot_area', 'window')
+        area            = cv2.getTrackbarPos('contour_area', 'window')  # the minimum area of a dice
+        dot_area        = cv2.getTrackbarPos('dot_area', 'window')  # the maximum area of a dot
 
         if gray_bool:
             img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -97,8 +97,7 @@ def main():
             contours, _ = cv2.findContours(img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
             for contour in contours:
-
-                if cv2.contourArea(contour) > area:
+                if cv2.contourArea(contour) > area:  # checking if the contour is a dice
                     (x, y, w, h) = cv2.boundingRect(contour)
                     cv2.rectangle(img_2, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
