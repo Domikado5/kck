@@ -21,5 +21,20 @@ def resize_images(path='sample_images/', shape=(512, 384)):
     print('Finished.')
 
 
+def rename_images(path='sample_images/'):
+    """Renames images in a directory to 1.jpg, 2.jpg etc.
+
+    Args:
+        path (str, optional): the path to the directory with images. Defaults to 'sample_images/'.
+    """
+    for i, file in enumerate(os.listdir(path), start=1):
+        filename_old = f'{path}{file}'
+        filename_new = f'{path}{i}.jpg'
+        os.rename(filename_old, filename_new)
+        print(f'Renamed {file} to {i}.jpg')
+    print('Finished')
+
+
 if __name__ == '__main__':
-    resize_images()
+    # rename_images(path='sample_images/zoomed/')
+    resize_images(path='sample_images/zoomed/', shape=(600, 800))

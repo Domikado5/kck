@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import os
 
 
 def null_func(arg):
@@ -13,7 +14,7 @@ def draw_circles(image, circles):
         cv2.circle(image, (x, y), radius, (255, 0, 0), 2)
 
 
-def count_dots(dice, thresh=500):
+def find_dots(dice, param1, param2, min_radius, max_radius):
     """Counts dots of a dice
 
     Args:
@@ -25,10 +26,11 @@ def count_dots(dice, thresh=500):
     """
     dice_copy = dice.copy()
 
-    contours, _ = cv2.findContours(dice_copy, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    dots = filter(lambda cont: cv2.contourArea(cont) < thresh, contours)
+    dots = cv2.HoughCircles(dice_copy, cv2.HOUGH_GRADIENT, 1, 20, param1=param1, param2=param2, minRadius=min_radius, maxRadius=max_radius)
 
-    return len(list(dots))
+    if dots is not None:
+        return dots.reshape(-1, 3).astype(int)
+    return None
 
 
 def crop_dice(img, pos):
@@ -73,6 +75,9 @@ def plot_transformations(img_path='sample_images/dices.jpg'):
 
 
 def main():
+    """
+    Creates windows with previews and trackbars to easily adjust parameters.
+    """
     cv2.namedWindow('window', cv2.WINDOW_NORMAL)
 
     cv2.createTrackbar('grayscale', 'window', 0, 1, null_func)
@@ -82,13 +87,13 @@ def main():
     cv2.createTrackbar('threshold_toggle', 'window', 0, 1, null_func)
     cv2.createTrackbar('threshold', 'window', 0, 255, null_func)
     cv2.createTrackbar('canny_toggle', 'window', 0, 1, null_func)
-    cv2.createTrackbar('canny_thresh_1', 'window', 0, 255, null_func)
-    cv2.createTrackbar('canny_thresh_2', 'window', 0, 255, null_func)
     cv2.createTrackbar('contour_toggle', 'window', 0, 1, null_func)
-    cv2.createTrackbar('contour_area', 'window', 0, 1000, null_func)
-    cv2.createTrackbar('dot_area', 'window', 0, 1000, null_func)
+    cv2.createTrackbar('contour_area', 'window', 500, 1000, null_func)
+    cv2.createTrackbar('param1', 'window', 40, 100, null_func)
+    cv2.createTrackbar('param2', 'window', 10, 100, null_func)
+    cv2.createTrackbar('max_rad', 'window', 0, 100, null_func)
 
-    base_img = cv2.imread('sample_images/dices.jpg')
+    base_img = cv2.imread('sample_images/zoomed/5.jpg')
 
     while True:
         img = base_img.copy()  # the copy of the base image that will be transformed
@@ -101,11 +106,11 @@ def main():
         threshold_bool  = cv2.getTrackbarPos('threshold_toggle', 'window') == 1
         thresh          = cv2.getTrackbarPos('threshold', 'window')
         canny_bool      = cv2.getTrackbarPos('canny_toggle', 'window') == 1
-        canny_thresh_1  = cv2.getTrackbarPos('canny_thresh_1', 'window')
-        canny_thresh_2  = cv2.getTrackbarPos('canny_thresh_2', 'window')
         contour_bool    = cv2.getTrackbarPos('contour_toggle', 'window') == 1
         area            = cv2.getTrackbarPos('contour_area', 'window')  # the minimum area of a dice
-        dot_area        = cv2.getTrackbarPos('dot_area', 'window')  # the maximum area of a dot
+        param_1         = cv2.getTrackbarPos('param1', 'window')
+        param_2         = cv2.getTrackbarPos('param2', 'window')
+        max_rad         = cv2.getTrackbarPos('max_rad', 'window')
 
         if gray_bool:
             img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
@@ -118,7 +123,7 @@ def main():
             _, img = cv2.threshold(img, thresh, 255, cv2.THRESH_BINARY)
         
         if canny_bool:
-            img = cv2.Canny(img, canny_thresh_1, canny_thresh_2)
+            img = cv2.Canny(img, 0, 0)
         
         if contour_bool:
             contours, _ = cv2.findContours(img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
@@ -129,9 +134,16 @@ def main():
                     cv2.rectangle(img_2, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
                     dice = crop_dice(img, (x, y, w, h))
-                    num_of_dots = count_dots(dice, dot_area)
+                    dots = find_dots(dice, param_1, param_2, 0, 0)
 
-                    cv2.putText(img_2, f'Dots: {num_of_dots}', (int(x+w), int(y+h)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+
+                    if dots is not None:
+                        dots = dots[dots[:, 2] < max_rad]
+                        for dot_x, dot_y, dot_rad in dots:
+                            cv2.circle(img_2, (x+dot_x, y+dot_y), dot_rad, (0, 0, 255), 2)
+                    
+                        num_of_dots = dots.shape[0]
+                        cv2.putText(img_2, f'Dots: {num_of_dots}', (int(x), int(y+h)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
 
 
         cv2.imshow('Transformed_img', img)
@@ -142,6 +154,59 @@ def main():
     cv2.destroyAllWindows()
 
 
+def test_images(path='sample_images/'):
+    """Tests images in a given directory with given parameters.
+    Plots the results.
+
+    Args:
+        path (str, optional): the path to the directory with images. Defaults to 'sample_images/'.
+    """
+    gaussian_kernel = (5, 5)
+    gaussian_sigma = 4
+    threshold = 120
+    contour_area = 1000
+    param_1 = 50
+    param_2 = 15
+    max_rad = 20
+
+
+    for i, file in enumerate(os.listdir(path), start=1):
+        plt.subplot(3, 4, i)
+        plt.xticks([])
+        plt.yticks([])
+        base_img = cv2.imread(f'{path}{file}')
+        img_copy = base_img.copy()
+        base_img = cv2.cvtColor(base_img, cv2.COLOR_BGR2RGB)
+
+        img_copy = cv2.cvtColor(img_copy, cv2.COLOR_RGB2GRAY)
+        img_copy = cv2.GaussianBlur(img_copy, gaussian_kernel, gaussian_sigma)
+        _, img_copy = cv2.threshold(img_copy, threshold, 255, cv2.THRESH_BINARY)
+        img_copy = cv2.Canny(img_copy, 0, 0)
+
+        contours, _ = cv2.findContours(img_copy, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        for cont in contours:
+            if cv2.contourArea(cont) > contour_area:  # if true then it's a dice
+                    (x, y, w, h) = cv2.boundingRect(cont)
+                    cv2.rectangle(base_img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+                    dice = crop_dice(img_copy, (x, y, w, h))
+                    dots = find_dots(dice, param_1, param_2, 0, max_rad)
+
+                    if dots is not None:
+                        dots = dots[dots[:, 2] < max_rad]
+                        for dot_x, dot_y, dot_rad in dots:
+                            cv2.circle(base_img, (x+dot_x, y+dot_y), dot_rad, (0, 0, 255), 2)
+                    
+                        num_of_dots = dots.shape[0]
+                        cv2.putText(base_img, f'Dots: {num_of_dots}', (int(x), int(y+h)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+        
+        plt.imshow(base_img)
+    plt.show()
+
+
+
 if __name__ == '__main__':
-    main()
+    # main()
     # plot_transformations()
+    test_images(path='sample_images/zoomed/')
