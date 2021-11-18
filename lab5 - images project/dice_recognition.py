@@ -52,7 +52,7 @@ def plot_transformations(img_path='sample_images/dices.jpg'):
     """Plots all transformations, one by one, and saves the transformed images to a pdf.
 
     Args:
-        img_path (str, optional): the path to an image. Defaults to 'dices.jpg'.
+        img_path (str, optional): the path to an image. Defaults to 'sample_images/dices.jpg'.
     """
     img_base = cv2.imread(img_path)
     img_base = cv2.cvtColor(img_base, cv2.COLOR_BGR2RGB)
@@ -80,50 +80,41 @@ def main():
     """
     cv2.namedWindow('window', cv2.WINDOW_NORMAL)
 
-    cv2.createTrackbar('grayscale', 'window', 0, 1, null_func)
-    cv2.createTrackbar('gaussian_toggle', 'window', 0, 1, null_func)
-    cv2.createTrackbar('kernel_gaussian', 'window', 1, 5, null_func)
-    cv2.createTrackbar('sigma_gaussian', 'window', 0, 10, null_func)
     cv2.createTrackbar('threshold_toggle', 'window', 0, 1, null_func)
     cv2.createTrackbar('threshold', 'window', 0, 255, null_func)
-    cv2.createTrackbar('canny_toggle', 'window', 0, 1, null_func)
     cv2.createTrackbar('contour_toggle', 'window', 0, 1, null_func)
     cv2.createTrackbar('contour_area', 'window', 500, 1000, null_func)
-    cv2.createTrackbar('param1', 'window', 40, 100, null_func)
-    cv2.createTrackbar('param2', 'window', 10, 100, null_func)
-    cv2.createTrackbar('max_rad', 'window', 0, 100, null_func)
+    cv2.createTrackbar('param1', 'window', 50, 100, null_func)
+    cv2.createTrackbar('param2', 'window', 15, 100, null_func)
+    cv2.createTrackbar('max_rad', 'window', 20, 200, null_func)
 
-    base_img = cv2.imread('sample_images/zoomed/5.jpg')
+    base_img = cv2.imread('images/easy/9.jpg')
 
     while True:
         img = base_img.copy()  # the copy of the base image that will be transformed
         img_2 = base_img.copy()  # the copy of the base image on which the contours etc will be drawn
 
-        gray_bool       = cv2.getTrackbarPos('grayscale', 'window') == 1
-        gaussian_bool   = cv2.getTrackbarPos('gaussian_toggle', 'window') == 1
-        kernel_g        = cv2.getTrackbarPos('kernel_gaussian', 'window')
-        sigma_g         = cv2.getTrackbarPos('sigma_gaussian', 'window')
+        kernel_g = 5
+        sigma_g = 4
+
         threshold_bool  = cv2.getTrackbarPos('threshold_toggle', 'window') == 1
         thresh          = cv2.getTrackbarPos('threshold', 'window')
-        canny_bool      = cv2.getTrackbarPos('canny_toggle', 'window') == 1
         contour_bool    = cv2.getTrackbarPos('contour_toggle', 'window') == 1
         area            = cv2.getTrackbarPos('contour_area', 'window')  # the minimum area of a dice
         param_1         = cv2.getTrackbarPos('param1', 'window')
         param_2         = cv2.getTrackbarPos('param2', 'window')
         max_rad         = cv2.getTrackbarPos('max_rad', 'window')
 
-        if gray_bool:
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         
-        if gaussian_bool:
-            if kernel_g % 2 == 1:
-                img = cv2.GaussianBlur(img, (kernel_g, kernel_g), sigma_g)
+        img = cv2.GaussianBlur(img, (kernel_g, kernel_g), sigma_g)
         
         if threshold_bool:
             _, img = cv2.threshold(img, thresh, 255, cv2.THRESH_BINARY)
         
-        if canny_bool:
-            img = cv2.Canny(img, 0, 0)
+        img = cv2.Canny(img, 0, 0)
+        # img = cv2.dilate(img, (3, 3))
+        # img = cv2.erode(img, (3, 3))
         
         if contour_bool:
             contours, _ = cv2.findContours(img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
@@ -154,19 +145,19 @@ def main():
     cv2.destroyAllWindows()
 
 
-def test_images(path='sample_images/'):
+def test_images(path='images/'):
     """Tests images in a given directory with given parameters.
     Plots the results.
 
     Args:
-        path (str, optional): the path to the directory with images. Defaults to 'sample_images/'.
+        path (str, optional): the path to the directory with images. Defaults to 'images/'.
     """
     gaussian_kernel = (5, 5)
     gaussian_sigma = 4
-    threshold = 120
+    # threshold = 120
     contour_area = 1000
     param_1 = 50
-    param_2 = 15
+    param_2 = 25
     max_rad = 20
 
 
@@ -179,6 +170,9 @@ def test_images(path='sample_images/'):
         base_img = cv2.cvtColor(base_img, cv2.COLOR_BGR2RGB)
 
         img_copy = cv2.cvtColor(img_copy, cv2.COLOR_RGB2GRAY)
+
+        threshold = np.quantile(img_copy, 0.5)
+
         img_copy = cv2.GaussianBlur(img_copy, gaussian_kernel, gaussian_sigma)
         _, img_copy = cv2.threshold(img_copy, threshold, 255, cv2.THRESH_BINARY)
         img_copy = cv2.Canny(img_copy, 0, 0)
@@ -192,6 +186,8 @@ def test_images(path='sample_images/'):
 
                     dice = crop_dice(img_copy, (x, y, w, h))
                     dots = find_dots(dice, param_1, param_2, 0, max_rad)
+
+                    cv2.putText(base_img, f'Threshold: {threshold}', (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
 
                     if dots is not None:
                         dots = dots[dots[:, 2] < max_rad]
@@ -207,6 +203,6 @@ def test_images(path='sample_images/'):
 
 
 if __name__ == '__main__':
-    # main()
+    main()
     # plot_transformations()
-    test_images(path='sample_images/zoomed/')
+    # test_images(path='images/easy/')

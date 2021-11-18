@@ -2,12 +2,12 @@ import os
 import cv2
 
 
-def resize_images(path='sample_images/', shape=(512, 384)):
+def resize_images(path='images/', shape=(600, 800)):
     """Resizes images in a given directory
 
     Args:
-        path (str, optional): the path to the directory with images. Defaults to 'sample_images/'.
-        shape (tuple, optional): the desired shape. Defaults to (512, 384).
+        path (str, optional): the path to the directory with images. Defaults to 'images/'.
+        shape (tuple, optional): the desired shape. Defaults to (600, 800).
     """
     (x, y) = shape
 
@@ -21,11 +21,11 @@ def resize_images(path='sample_images/', shape=(512, 384)):
     print('Finished.')
 
 
-def rename_images(path='sample_images/'):
+def rename_images(path='images/'):
     """Renames images in a directory to 1.jpg, 2.jpg etc.
 
     Args:
-        path (str, optional): the path to the directory with images. Defaults to 'sample_images/'.
+        path (str, optional): the path to the directory with images. Defaults to 'images/'.
     """
     for i, file in enumerate(os.listdir(path), start=1):
         filename_old = f'{path}{file}'
@@ -36,5 +36,5 @@ def rename_images(path='sample_images/'):
 
 
 if __name__ == '__main__':
-    # rename_images(path='sample_images/zoomed/')
-    resize_images(path='sample_images/zoomed/', shape=(600, 800))
+    # rename_images(path='images/easy/')
+    resize_images(path='images/easy/', shape=(600, 800))
