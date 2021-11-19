@@ -26,18 +26,17 @@ def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
     filtered_dots = []
 
     for dot in dots:
-        if cv2.contourArea(dot) > min_dot_size and cv2.contourArea(dot) < max_dot_size:
+        if min_dot_size < cv2.contourArea(dot) < max_dot_size:
             filtered_dots.append(dot)
 
     return len(filtered_dots), filtered_dots
 
 
-def all_transformations(img_path='images/easy/1.jpg', thresh=120, min_area=2000, max_area=100000):
+def all_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=100000):
     """Performs all transformations and contours dice.
 
     Args:
         img_path (str, optional): the path to the image. Defaults to 'images/easy/1.jpg'.
-        thresh (int, optional): the threshold value. Defaults to 120.
         min_area (int, optional): the min area value to filter contours. Defaults to 2000.
         max_area (int, optional): the max area value to filter contours. Defaults to 100000.
 
@@ -52,6 +51,7 @@ def all_transformations(img_path='images/easy/1.jpg', thresh=120, min_area=2000,
 
     img_copy = cv2.cvtColor(img_copy, cv2.COLOR_BGR2GRAY)
     img_copy = cv2.medianBlur(img_copy, 5)
+    thresh = np.quantile(img_copy, 0.8)
     img_copy = cv2.filter2D(img_copy, -1, sharpen_kernel)
     _, img_copy = cv2.threshold(img_copy, thresh, 255, cv2.THRESH_BINARY_INV)
     img_copy = cv2.morphologyEx(img_copy, cv2.MORPH_CLOSE, morph_kernel, iterations=1)
@@ -60,7 +60,7 @@ def all_transformations(img_path='images/easy/1.jpg', thresh=120, min_area=2000,
     dots_total = 0
 
     for contour in contours:
-        if cv2.contourArea(contour) > min_area and cv2.contourArea(contour) < max_area:
+        if min_area < cv2.contourArea(contour) < max_area:
             (x, y, w, h) = cv2.boundingRect(contour)
             
             num_of_dots, dots = get_dots(img_copy, (x, y, w, h))
@@ -77,12 +77,13 @@ def all_transformations(img_path='images/easy/1.jpg', thresh=120, min_area=2000,
     return img
 
 
-def show_transformations(img_path='images/easy/1.jpg', thresh=120):
+def show_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=100000):
     """Shows the effect every transformation on a picture
 
     Args:
         img_path (str, optional): the path to the image. Defaults to 'images/easy/1.jpg'.
-        thresh (int, optional): the threshold value. Defaults to 120.
+        min_area (int, optional): the min_area value. Defaults to 2000.
+        max_area (int, optional): the max area value. Defaults to 100000.
     """
     img = cv2.imread(img_path)
     img_copy = img.copy()
@@ -91,6 +92,7 @@ def show_transformations(img_path='images/easy/1.jpg', thresh=120):
     morph_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
 
     gray = cv2.cvtColor(img_copy, cv2.COLOR_BGR2GRAY)
+    thresh_val = np.quantile(gray, 0.8)
     cv2.imshow(gray)
 
     blur = cv2.medianBlur(gray, 5)
@@ -99,7 +101,7 @@ def show_transformations(img_path='images/easy/1.jpg', thresh=120):
     sharpen = cv2.filter2D(blur, -1, sharpen_kernel)
     cv2.imshow(sharpen)
 
-    _, thresh = cv2.threshold(sharpen, thresh, 255, cv2.THRESH_BINARY_INV)
+    _, thresh = cv2.threshold(sharpen, thresh_val, 255, cv2.THRESH_BINARY_INV)
     cv2.imshow(thresh)
 
     close = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, morph_kernel, iterations=1)
@@ -108,25 +110,24 @@ def show_transformations(img_path='images/easy/1.jpg', thresh=120):
     contours, _ = cv2.findContours(close, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in contours:
-        if cv2.contourArea(contour) > 2000 and cv2.contourArea(contour) < 100000:
+        if min_area < cv2.contourArea(contour) < max_area:
             (x, y, w, h) = cv2.boundingRect(contour)
             cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
     
     cv2.imshow(img)
 
 
-def test_all(path='images/easy/', thresh=120, min_area=2000, max_area=100000):
+def test_all(path='images/easy/', min_area=2000, max_area=100000):
     """Tests all images in a given directory
     Args:
         path (str, optional): the path to the directory with images. Defaults to 'images/easy/'.
-        thresh (int, optional): the threshold value. Defaults to 120.
         min_area (int, optional): the min_area value. Defaults to 2000.
         max_area (int, optional): the max area value. Defaults to 100000.
     """
     for image in os.listdir(path):
         img_path = f'{path}{image}'
 
-        cv2.imshow(all_transformations(img_path, thresh=thresh, min_area=min_area, max_area=max_area))
+        cv2.imshow(all_transformations(img_path, min_area=min_area, max_area=max_area))
 
 
 if __name__ == '__main__':
