@@ -28,9 +28,36 @@ def find_dots(dice, param1, param2, min_radius, max_radius):
 
     dots = cv2.HoughCircles(dice_copy, cv2.HOUGH_GRADIENT, 1, 20, param1=param1, param2=param2, minRadius=min_radius, maxRadius=max_radius)
 
+    
     if dots is not None:
         return dots.reshape(-1, 3).astype(int)
     return None
+
+def find_dots2(dice):
+    dice_copy = dice.copy()
+
+    dice_copy = cv2.morphologyEx(dice_copy, cv2.MORPH_CLOSE, \
+        cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (21,21)))
+    contours, hierarchy = cv2.findContours(dice_copy, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    major_contours = []
+    
+    if len(contours) == 1:
+        major_contours.append(contours[0])
+        return major_contours
+    
+    for i in range(len(contours)):
+        if hierarchy[0][i][2] != -1:
+            major_contours.append(contours[i])
+
+    dot = []
+
+    for c in major_contours:
+        contour_poly = cv2.approxPolyDP(c, 3, True)
+        center, radius = cv2.minEnclosingCircle(contour_poly)
+        # center is touple
+
+    return len(major_contours[0])
 
 
 def crop_dice(img, pos):
@@ -126,6 +153,7 @@ def main():
 
                     dice = crop_dice(img, (x, y, w, h))
                     dots = find_dots(dice, param_1, param_2, 0, 0)
+                    dot_count = find_dots2(dice)
 
 
                     if dots is not None:
@@ -133,7 +161,7 @@ def main():
                         for dot_x, dot_y, dot_rad in dots:
                             cv2.circle(img_2, (x+dot_x, y+dot_y), dot_rad, (0, 0, 255), 2)
                     
-                        num_of_dots = dots.shape[0]
+                        num_of_dots = dot_count
                         cv2.putText(img_2, f'Dots: {num_of_dots}', (int(x), int(y+h)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
 
 
