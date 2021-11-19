@@ -5,11 +5,11 @@ import os
 
 
 def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
-    """Finds dots of a given die
+    """Finds dots of a given dice
 
     Args:
         img (np.ndarray): image
-        pos (tuple): a tuple containing the position of the die
+        pos (tuple): a tuple containing the position of the dice
         min_dot_size (int): the minimum area of a dot
         max_dot_size (int): the maximum area of a dot
 
@@ -19,22 +19,25 @@ def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
     """
     (x, y, w, h) = pos
 
-    die = img[y:y+h, x:x+w]
+    dice = img[y:y+h, x:x+w]
 
-    dots, _ = cv2.findContours(die, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    dots, hierarchy = cv2.findContours(dice, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
     filtered_dots = []
     perimeters = []
+    areas = []
 
     for dot in dots:
         if min_dot_size < cv2.contourArea(dot) < max_dot_size:
             filtered_dots.append(dot)
-            # ellipse = cv2.fitEllipse(dot)
             perimeter = cv2.arcLength(dot, True)
             perimeters.append(perimeter)
-    # filtered_dots = [dot for idx, dot in enumerate(filtered_dots)\
-        #  if abs(perimeters[idx] - max(perimeters)) < 10]
+            areas.append(cv2.contourArea(dot))
+    filtered_dots = [dot for idx, dot in enumerate(filtered_dots)\
+         if perimeters[idx] > max(perimeters)*0.65 and \
+             areas[idx] > max(areas)*0.5]
     print(perimeters)
+    print(areas)
     print('-----')
 
     return len(filtered_dots), filtered_dots
@@ -125,7 +128,7 @@ def show_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=1
     cv2.imshow(img_path + '-contours', img)
 
 
-def test_all(path='images/easy/', min_area=2000, max_area=100000):
+def test_all(path='images/hard/', min_area=2000, max_area=100000):
     """Tests all images in a given directory
     Args:
         path (str, optional): the path to the directory with images. Defaults to 'images/easy/'.
