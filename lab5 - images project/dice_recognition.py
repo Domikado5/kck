@@ -10,6 +10,8 @@ def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
     Args:
         img (np.ndarray): image
         pos (tuple): a tuple containing the position of the die
+        min_dot_size (int): the minimum area of a dot
+        max_dot_size (int): the maximum area of a dot
 
     Returns:
         int: number of dots
@@ -52,7 +54,7 @@ def all_transformations(img_path='images/easy/1.jpg', thresh=120, min_area=2000,
     img_copy = cv2.medianBlur(img_copy, 5)
     img_copy = cv2.filter2D(img_copy, -1, sharpen_kernel)
     _, img_copy = cv2.threshold(img_copy, thresh, 255, cv2.THRESH_BINARY_INV)
-    img_copy = cv2.morphologyEx(img_copy, cv2.MORPH_CLOSE, morph_kernel, iterations=2)
+    img_copy = cv2.morphologyEx(img_copy, cv2.MORPH_CLOSE, morph_kernel, iterations=1)
     contours, _ = cv2.findContours(img_copy, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in contours:
@@ -96,7 +98,7 @@ def show_transformations(img_path='images/easy/1.jpg', thresh=120):
     _, thresh = cv2.threshold(sharpen, thresh, 255, cv2.THRESH_BINARY_INV)
     cv2.imshow(thresh)
 
-    close = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, morph_kernel, iterations=2)
+    close = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, morph_kernel, iterations=1)
     cv2.imshow(close)
 
     contours, _ = cv2.findContours(close, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
