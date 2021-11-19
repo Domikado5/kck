@@ -4,7 +4,33 @@ import cv2
 import os
 
 
-def contour_dice(img_path='images/easy/1.jpg', thresh=120, min_area=2000, max_area=100000):
+def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
+    """Finds dots of a given die
+
+    Args:
+        img (np.ndarray): image
+        pos (tuple): a tuple containing the position of the die
+
+    Returns:
+        int: number of dots
+        list: a list containing the positions of the dots
+    """
+    (x, y, w, h) = pos
+
+    die = img[y:y+h, x:x+w]
+
+    dots, _ = cv2.findContours(die, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+
+    filtered_dots = []
+
+    for dot in dots:
+        if cv2.contourArea(dot) > min_dot_size and cv2.contourArea(dot) < max_dot_size:
+            filtered_dots.append(dot)
+
+    return len(filtered_dots), filtered_dots
+
+
+def all_transformations(img_path='images/easy/1.jpg', thresh=120, min_area=2000, max_area=100000):
     """Performs all transformations and contours dice.
 
     Args:
@@ -14,7 +40,7 @@ def contour_dice(img_path='images/easy/1.jpg', thresh=120, min_area=2000, max_ar
         max_area (int, optional): the max area value to filter contours. Defaults to 100000.
 
     Returns:
-        np.array: image after transformations
+        np.ndarray: image after transformations
     """
     img = cv2.imread(img_path)
     img_copy = img.copy()
@@ -32,7 +58,15 @@ def contour_dice(img_path='images/easy/1.jpg', thresh=120, min_area=2000, max_ar
     for contour in contours:
         if cv2.contourArea(contour) > min_area and cv2.contourArea(contour) < max_area:
             (x, y, w, h) = cv2.boundingRect(contour)
+            
+            num_of_dots, dots = get_dots(img_copy, (x, y, w, h))
+
+            for dot in dots:
+                x_d, y_d, w_d, h_d = cv2.boundingRect(dot)
+                cv2.rectangle(img, (x+x_d, y+y_d), (x+x_d+w_d, y+y_d+h_d), (255, 0, 0), 2)
+
             cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            cv2.putText(img, f'Dots: {num_of_dots}', (x, y+h), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
     
     return img
 
@@ -77,7 +111,6 @@ def show_transformations(img_path='images/easy/1.jpg', thresh=120):
 
 def test_all(path='images/easy/', thresh=120, min_area=2000, max_area=100000):
     """Tests all images in a given directory
-
     Args:
         path (str, optional): the path to the directory with images. Defaults to 'images/easy/'.
         thresh (int, optional): the threshold value. Defaults to 120.
@@ -87,7 +120,7 @@ def test_all(path='images/easy/', thresh=120, min_area=2000, max_area=100000):
     for image in os.listdir(path):
         img_path = f'{path}{image}'
 
-        cv2.imshow(contour_dice(cv2.imread(img_path), thresh=thresh, min_area=min_area, max_area=max_area))
+        cv2.imshow(all_transformations(img_path, thresh=thresh, min_area=min_area, max_area=max_area))
 
 
 if __name__ == '__main__':
