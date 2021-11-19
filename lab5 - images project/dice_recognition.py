@@ -24,10 +24,18 @@ def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
     dots, _ = cv2.findContours(die, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
     filtered_dots = []
+    perimeters = []
 
     for dot in dots:
         if min_dot_size < cv2.contourArea(dot) < max_dot_size:
             filtered_dots.append(dot)
+            # ellipse = cv2.fitEllipse(dot)
+            perimeter = cv2.arcLength(dot, True)
+            perimeters.append(perimeter)
+    # filtered_dots = [dot for idx, dot in enumerate(filtered_dots)\
+        #  if abs(perimeters[idx] - max(perimeters)) < 10]
+    print(perimeters)
+    print('-----')
 
     return len(filtered_dots), filtered_dots
 
@@ -93,19 +101,19 @@ def show_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=1
 
     gray = cv2.cvtColor(img_copy, cv2.COLOR_BGR2GRAY)
     thresh_val = np.quantile(gray, 0.8)
-    cv2.imshow(gray)
+    cv2.imshow(img_path + '-gray', gray)
 
     blur = cv2.medianBlur(gray, 5)
-    cv2.imshow(blur)
+    cv2.imshow(img_path + '-blur', blur)
 
     sharpen = cv2.filter2D(blur, -1, sharpen_kernel)
-    cv2.imshow(sharpen)
+    cv2.imshow(img_path + '-sharpen', sharpen)
 
     _, thresh = cv2.threshold(sharpen, thresh_val, 255, cv2.THRESH_BINARY_INV)
-    cv2.imshow(thresh)
+    cv2.imshow(img_path + '-threshold', thresh)
 
     close = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, morph_kernel, iterations=1)
-    cv2.imshow(close)
+    cv2.imshow(img_path + '-closing', close)
 
     contours, _ = cv2.findContours(close, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -114,10 +122,10 @@ def show_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=1
             (x, y, w, h) = cv2.boundingRect(contour)
             cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
     
-    cv2.imshow(img)
+    cv2.imshow(img_path + '-contours', img)
 
 
-def test_all(path='images/hard/', min_area=2000, max_area=100000):
+def test_all(path='images/easy/', min_area=2000, max_area=100000):
     """Tests all images in a given directory
     Args:
         path (str, optional): the path to the directory with images. Defaults to 'images/easy/'.
@@ -126,8 +134,11 @@ def test_all(path='images/hard/', min_area=2000, max_area=100000):
     """
     for image in os.listdir(path):
         img_path = f'{path}{image}'
+        # if image not in ['4.jpg']:
+        #     continue
+        cv2.imshow(image, all_transformations(img_path, min_area=min_area, max_area=max_area))
 
-        cv2.imshow('Title', all_transformations(img_path, min_area=min_area, max_area=max_area))
+        # show_transformations(img_path=img_path)
 
         if cv2.waitKey(0) == 27:
             cv2.destroyAllWindows()
