@@ -57,6 +57,8 @@ def all_transformations(img_path='images/easy/1.jpg', thresh=120, min_area=2000,
     img_copy = cv2.morphologyEx(img_copy, cv2.MORPH_CLOSE, morph_kernel, iterations=1)
     contours, _ = cv2.findContours(img_copy, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
+    dots_total = 0
+
     for contour in contours:
         if cv2.contourArea(contour) > min_area and cv2.contourArea(contour) < max_area:
             (x, y, w, h) = cv2.boundingRect(contour)
@@ -65,11 +67,13 @@ def all_transformations(img_path='images/easy/1.jpg', thresh=120, min_area=2000,
 
             for dot in dots:
                 x_d, y_d, w_d, h_d = cv2.boundingRect(dot)
-                cv2.rectangle(img, (x+x_d, y+y_d), (x+x_d+w_d, y+y_d+h_d), (255, 0, 0), 2)
+                cv2.ellipse(img, (int(x+x_d+w_d/2), int(y+y_d+h_d/2)), (int(w_d/2), int(h_d/2)), 0, 0, 360, (255, 0, 0), 2)
 
             cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
             cv2.putText(img, f'Dots: {num_of_dots}', (x, y+h), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+            dots_total += num_of_dots
     
+    cv2.putText(img, f'Total: {dots_total}', (5, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     return img
 
 
