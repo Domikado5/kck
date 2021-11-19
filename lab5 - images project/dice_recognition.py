@@ -117,7 +117,7 @@ def show_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=1
     cv2.imshow(img)
 
 
-def test_all(path='images/easy/', min_area=2000, max_area=100000):
+def test_all(path='images/hard/', min_area=2000, max_area=100000):
     """Tests all images in a given directory
     Args:
         path (str, optional): the path to the directory with images. Defaults to 'images/easy/'.
@@ -127,8 +127,10 @@ def test_all(path='images/easy/', min_area=2000, max_area=100000):
     for image in os.listdir(path):
         img_path = f'{path}{image}'
 
-        cv2.imshow(all_transformations(img_path, min_area=min_area, max_area=max_area))
+        cv2.imshow('Title', all_transformations(img_path, min_area=min_area, max_area=max_area))
 
+        if cv2.waitKey(0) == 27:
+            cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     test_all()
