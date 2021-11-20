@@ -17,9 +17,11 @@ def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
         int: number of dots
         list: a list containing the positions of the dots
     """
+
     (x, y, w, h) = pos
 
     dice = img[y:y+h, x:x+w]
+
 
     dots, hierarchy = cv2.findContours(dice, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -54,6 +56,7 @@ def all_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=10
     Returns:
         np.ndarray: image after transformations
     """
+
     img = cv2.imread(img_path)
     img_copy = img.copy()
 
