@@ -23,7 +23,7 @@ def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
     dice = img[y:y+h, x:x+w]
 
 
-    dots, hierarchy = cv2.findContours(dice, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    dots, _ = cv2.findContours(dice, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
     filtered_dots = []
     perimeters = []
@@ -38,9 +38,6 @@ def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
     filtered_dots = [dot for idx, dot in enumerate(filtered_dots)\
          if perimeters[idx] > max(perimeters)*0.65 and \
              areas[idx] > max(areas)*0.5]
-    print(perimeters)
-    print(areas)
-    print('-----')
 
     return len(filtered_dots), filtered_dots
 
@@ -99,6 +96,10 @@ def show_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=1
         min_area (int, optional): the min_area value. Defaults to 2000.
         max_area (int, optional): the max area value. Defaults to 100000.
     """
+    save_path = 'images/transformations/'
+    file_name = img_path.split('/')[-1]
+    file_extension = file_name.split('.')[-1]
+    file_name = file_name.split('.')[0]
     img = cv2.imread(img_path)
     img_copy = img.copy()
 
@@ -107,19 +108,24 @@ def show_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=1
 
     gray = cv2.cvtColor(img_copy, cv2.COLOR_BGR2GRAY)
     thresh_val = np.quantile(gray, 0.8)
-    cv2.imshow(img_path + '-gray', gray)
+    # cv2.imshow(img_path + '-gray', gray)	
+    cv2.imwrite(save_path + file_name + '-1.' + file_extension, gray) 
 
     blur = cv2.medianBlur(gray, 5)
-    cv2.imshow(img_path + '-blur', blur)
+    # cv2.imshow(img_path + '-blur', blur)
+    cv2.imwrite(save_path + file_name + '-2.' + file_extension, blur) 
 
     sharpen = cv2.filter2D(blur, -1, sharpen_kernel)
-    cv2.imshow(img_path + '-sharpen', sharpen)
+    # cv2.imshow(img_path + '-sharpen', sharpen)
+    cv2.imwrite(save_path + file_name + '-3.' + file_extension, sharpen) 
 
     _, thresh = cv2.threshold(sharpen, thresh_val, 255, cv2.THRESH_BINARY_INV)
-    cv2.imshow(img_path + '-threshold', thresh)
+    # cv2.imshow(img_path + '-threshold', thresh)
+    cv2.imwrite(save_path + file_name + '-4.' + file_extension, thresh) 
 
     close = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, morph_kernel, iterations=1)
-    cv2.imshow(img_path + '-closing', close)
+    # cv2.imshow(img_path + '-closing', close)
+    cv2.imwrite(save_path + file_name + '-5.' + file_extension, close) 
 
     contours, _ = cv2.findContours(close, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -128,10 +134,11 @@ def show_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=1
             (x, y, w, h) = cv2.boundingRect(contour)
             cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
     
-    cv2.imshow(img_path + '-contours', img)
+    # cv2.imshow(img_path + '-contours', img)
+    cv2.imwrite(save_path + file_name + '-6.' + file_extension, img)
 
 
-def test_all(path='images/hard/', min_area=2000, max_area=100000):
+def test_all(path='images/easy/', min_area=2000, max_area=100000):
     """Tests all images in a given directory
     Args:
         path (str, optional): the path to the directory with images. Defaults to 'images/easy/'.
@@ -140,11 +147,12 @@ def test_all(path='images/hard/', min_area=2000, max_area=100000):
     """
     for image in os.listdir(path):
         img_path = f'{path}{image}'
-        # if image not in ['4.jpg']:
+        # if image not in ['2.jpg']:
         #     continue
         cv2.imshow(image, all_transformations(img_path, min_area=min_area, max_area=max_area))
 
         # show_transformations(img_path=img_path)
+        # cv2.imwrite('images/transformations/' + image, all_transformations(img_path, min_area=min_area, max_area=max_area))
 
         if cv2.waitKey(0) == 27:
             cv2.destroyAllWindows()
