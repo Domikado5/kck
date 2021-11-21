@@ -5,11 +5,11 @@ import os
 
 
 def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
-    """Finds dots of a given dice
+    """Finds dots of a given die
 
     Args:
         img (np.ndarray): image
-        pos (tuple): a tuple containing the position of the dice
+        pos (tuple): a tuple containing the position of the die
         min_dot_size (int): the minimum area of a dot
         max_dot_size (int): the maximum area of a dot
 
@@ -43,7 +43,7 @@ def get_dots(img, pos, min_dot_size=100, max_dot_size=1000):
 
 
 def all_transformations(img_path='images/easy/1.jpg', min_area=2000, max_area=100000):
-    """Performs all transformations and contours dice.
+    """Performs all transformations and contours a die.
 
     Args:
         img_path (str, optional): the path to the image. Defaults to 'images/easy/1.jpg'.
@@ -147,8 +147,7 @@ def test_all(path='images/easy/', min_area=2000, max_area=100000):
     """
     for image in os.listdir(path):
         img_path = f'{path}{image}'
-        # if image not in ['2.jpg']:
-        #     continue
+
         cv2.imshow(image, all_transformations(img_path, min_area=min_area, max_area=max_area))
 
         # show_transformations(img_path=img_path)
@@ -157,5 +156,24 @@ def test_all(path='images/easy/', min_area=2000, max_area=100000):
         if cv2.waitKey(0) == 27:
             cv2.destroyAllWindows()
 
+
+def make_outputs(subdir='easy/', min_area=2000, max_area=100000):
+    """Saves outputs for a given directory
+    Args:
+        subdir(str, optional): the path to the directory with images. Defaults to 'easy/'.
+        min_area (int, optional): the min_area value. Defaults to 2000.
+        max_area (int, optional): the max area value. Defaults to 100000.
+    """
+    output_path = 'output/'
+    input_path = f'images/{subdir}'
+    for image in os.listdir(input_path):
+        img_path = f'{input_path}{image}'
+
+        output = all_transformations(img_path, min_area=min_area, max_area=max_area)
+
+        cv2.imwrite(f'{output_path}{subdir}{image}', output)
+
+
 if __name__ == '__main__':
     test_all()
+    # make_outputs(subdir='hard/')
