@@ -82,13 +82,15 @@ def main():
 
     cv2.createTrackbar('threshold_toggle', 'window', 0, 1, null_func)
     cv2.createTrackbar('threshold', 'window', 0, 255, null_func)
+    cv2.createTrackbar('cann_1', 'window', 0, 255, null_func)
+    cv2.createTrackbar('cann_2', 'window', 0, 255, null_func)
     cv2.createTrackbar('contour_toggle', 'window', 0, 1, null_func)
     cv2.createTrackbar('contour_area', 'window', 500, 1000, null_func)
     cv2.createTrackbar('param1', 'window', 50, 100, null_func)
     cv2.createTrackbar('param2', 'window', 15, 100, null_func)
     cv2.createTrackbar('max_rad', 'window', 20, 200, null_func)
 
-    base_img = cv2.imread('images/easy/9.jpg')
+    base_img = cv2.imread('images/medium/9.jpg')
 
     while True:
         img = base_img.copy()  # the copy of the base image that will be transformed
@@ -99,6 +101,8 @@ def main():
 
         threshold_bool  = cv2.getTrackbarPos('threshold_toggle', 'window') == 1
         thresh          = cv2.getTrackbarPos('threshold', 'window')
+        cann_1          = cv2.getTrackbarPos('cann_1', 'window')
+        cann_2          = cv2.getTrackbarPos('cann_2', 'window')
         contour_bool    = cv2.getTrackbarPos('contour_toggle', 'window') == 1
         area            = cv2.getTrackbarPos('contour_area', 'window')  # the minimum area of a dice
         param_1         = cv2.getTrackbarPos('param1', 'window')
@@ -112,9 +116,7 @@ def main():
         if threshold_bool:
             _, img = cv2.threshold(img, thresh, 255, cv2.THRESH_BINARY)
         
-        img = cv2.Canny(img, 0, 0)
-        # img = cv2.dilate(img, (3, 3))
-        # img = cv2.erode(img, (3, 3))
+        img = cv2.Canny(img, cann_1, cann_2)
         
         if contour_bool:
             contours, _ = cv2.findContours(img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
@@ -171,7 +173,7 @@ def test_images(path='images/'):
 
         img_copy = cv2.cvtColor(img_copy, cv2.COLOR_RGB2GRAY)
 
-        threshold = np.quantile(img_copy, 0.5)
+        threshold = int(np.mean(img_copy))*1.1
 
         img_copy = cv2.GaussianBlur(img_copy, gaussian_kernel, gaussian_sigma)
         _, img_copy = cv2.threshold(img_copy, threshold, 255, cv2.THRESH_BINARY)
@@ -203,6 +205,6 @@ def test_images(path='images/'):
 
 
 if __name__ == '__main__':
-    main()
+    # main()
     # plot_transformations()
-    # test_images(path='images/easy/')
+    test_images(path='images/medium/')

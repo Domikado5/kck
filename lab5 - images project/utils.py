@@ -36,5 +36,5 @@ def rename_images(path='images/'):
 
 
 if __name__ == '__main__':
-    # rename_images(path='images/easy/')
+    rename_images(path='images/easy/')
     resize_images(path='images/easy/', shape=(600, 800))
