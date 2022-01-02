@@ -4,7 +4,11 @@ import sys
 
 
 def predict(filename, male_freqs=[80, 160], female_freqs=[180, 280], iterations=6):
-    w, signal = scipy.io.wavfile.read(filename)
+    try:
+        w, signal = scipy.io.wavfile.read(filename)
+    except:
+        print("Błąd w odczycie pliku")
+        return
 
     sample_length = len(signal)/w  # length in seconds
 
@@ -38,4 +42,5 @@ if __name__ == '__main__':
 
     prediction = predict(filename)
 
-    print(prediction)
+    if prediction:
+        print(prediction)
