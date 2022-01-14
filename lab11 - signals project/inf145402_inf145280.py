@@ -1,13 +1,17 @@
 import numpy as np
-import numpy.typing as npt
 import scipy.io.wavfile
 import sys
-from typing import List
+import warnings
+
+warnings.simplefilter('ignore', scipy.io.wavfile.WavFileWarning)
 
 
 def get_frequencies(
-    parts: npt.ArrayLike, sample_rate: int, iterations: int = 6
-) -> np.ndarray:
+    parts: np.ndarray,
+    sample_rate: int,
+    iterations: int = 6
+    ) -> np.ndarray:
+    
     freq = []
 
     for part in parts:
@@ -24,13 +28,12 @@ def get_frequencies(
 
 
 def is_male(
-    freq_count: npt.ArrayLike,
-    male_freqs: List[int] = [80, 160],
-    female_freqs: List[int] = [180, 280],
-) -> bool:
-    if sum(freq_count[male_freqs[0] : male_freqs[1]]) > sum(
-        freq_count[female_freqs[0] : female_freqs[1]]
-    ):
+    freq_count: np.ndarray,
+    male_freqs: list = [80, 160],
+    female_freqs: list = [180, 280]
+    ) -> bool:
+
+    if sum(freq_count[male_freqs[0] : male_freqs[1]]) > sum(freq_count[female_freqs[0] : female_freqs[1]]):
         return True
     return False
 
@@ -41,6 +44,9 @@ def predict(filename: str) -> str:
     except:
         print("Błąd w odczycie pliku")
         return
+    
+    if len(signal.shape) > 1:  # more than 1 channel
+        signal = signal[:, 0]  # select only the first channel
 
     sample_length = len(signal) / sample_rate  # length in seconds
 
